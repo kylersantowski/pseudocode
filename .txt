@@ -1,0 +1,9 @@
+# Pseudocode for a script to retrieve and display information about active processes
+
+1. Start by getting a list of active processes on the system.
+2. Iterate through each process in the list.
+3. For each process:
+    a. Retrieve and store the process name, ID, and memory usage.
+    b. Format the information into a readable output format.
+    c. Display the formatted information on the console.
+4. End of script.
