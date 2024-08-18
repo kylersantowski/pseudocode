@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Knot Visualization</title>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(135deg, #282c34, #3a3d47);
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        canvas {
+            background-color: #1e1e24;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 15px;
+            border-radius: 10px;
+            color: #ffffff;
+            z-index: 1;
+        }
+
+        .control-group {
+            margin-bottom: 10px;
+        }
+
+        label {
+            margin-right: 10px;
+            font-weight: bold;
+        }
+
+        input[type="number"] {
+            width: 70px;
+            padding: 5px;
+            border-radius: 6px;
+            border: 1px solid #444;
+            background-color: #2a2e35;
+            color: #fff;
+            font-size: 1em;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #0077cc;
+        }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <div class="control-group">
+            <label for="radius">Radius:</label>
+            <input type="number" id="radius" value="200" step="1">
+        </div>
+        <div class="control-group">
+            <label for="twist">Twist:</label>
+            <input type="number" id="twist" value="3" step="1">
+        </div>
+        <div class="control-group">
+            <label for="segments">Segments:</label>
+            <input type="number" id="segments" value="200" step="10">
+        </div>
+    </div>
+    <canvas id="knotCanvas" width="600" height="600"></canvas>
+    <script>
+        const canvas = document.getElementById('knotCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const radiusInput = document.getElementById('radius');
+        const twistInput = document.getElementById('twist');
+        const segmentsInput = document.getElementById('segments');
+
+        let angleX = 0; // Angle of rotation around the X-axis
+        let angleY = 0; // Angle of rotation around the Y-axis
+
+        // 3D Point Projection to 2D Canvas
+        function project(point, width, height, scale = 300) {
+            const [x, y, z] = point;
+
+            // Rotation around X axis
+            const xRotated = x;
+            const yRotated = y * Math.cos(angleX) - z * Math.sin(angleX);
+            const zRotatedX = y * Math.sin(angleX) + z * Math.cos(angleX);
+
+            // Rotation around Y axis
+            const xRotatedY = xRotated * Math.cos(angleY) + zRotatedX * Math.sin(angleY);
+            const zRotatedY = zRotatedX * Math.cos(angleY) - xRotated * Math.sin(angleY);
+
+            const perspective = scale / (scale + zRotatedY);
+
+            const xProjected = xRotatedY * perspective + width / 2;
+            const yProjected = yRotated * perspective + height / 2;
+
+            return [xProjected, yProjected];
+        }
+
+        // Create 3D Tendril Trefoil Helicoil Knot
+        function createKnot(radius, twist, segments) {
+            const points = [];
+
+            for (let i = 0; i <= segments; i++) {
+                const angle = (i / segments) * Math.PI * 2 * twist;
+                const x = radius * Math.sin(angle) * Math.cos(i * Math.PI * 2 / segments);
+                const y = radius * Math.cos(angle) * Math.sin(i * Math.PI * 2 / segments);
+                const z = radius * Math.sin(angle) * Math.sin(i * Math.PI * 2 / segments);
+                points.push([x, y, z]);
+            }
+
+            return points;
+        }
+
+        // Draw the Knot on Canvas
+        function drawKnot(points) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.beginPath();
+
+            points.forEach((point, index) => {
+                const [x, y] = project(point, canvas.width, canvas.height);
+                if (index === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            });
+
+            ctx.strokeStyle = '#ff9900';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+
+        // Update Knot Based on User Input
+        function updateKnot() {
+            const radius = parseFloat(radiusInput.value);
+            const twist = parseFloat(twistInput.value);
+            const segments = parseFloat(segmentsInput.value);
+
+            const points = createKnot(radius, twist, segments);
+            drawKnot(points);
+        }
+
+        // Animation loop
+        function animate() {
+            angleX += 0.01;
+            angleY += 0.01;
+            
+            updateKnot(); // Redraw the knot with updated angles
+            
+            requestAnimationFrame(animate); // Continue the loop
+        }
+
+        // Initialize the Knot
+        updateKnot();
+        animate(); // Start the animation
+
+        // Add Input Listeners to Update the Knot
+        radiusInput.addEventListener('input', updateKnot);
+        twistInput.addEventListener('input', updateKnot);
+        segmentsInput.addEventListener('input', updateKnot);
+    </script>
+</body>
+</html>
